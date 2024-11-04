@@ -1,0 +1,9 @@
+Package: com.developlab.clipboardalert
+Name: ClipboardAlert
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: Added clipboard paste alert for iOS 15 or below
+Maintainer: null
+Author: null
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.5000)
