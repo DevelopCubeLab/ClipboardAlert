@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  ClipboardLab
-//
-//  Created by on 2024/11/3.
-//
-
 import SwiftUI
 
 struct ContentView: View {
@@ -15,17 +8,19 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            if let version = Double(systemVersion), version < 16.0 {
-                // 系统版本低于16.0
-                Text("您当前的系统版本为iOS \(systemVersion) \n您可以尝试使用该工具进行测试。")
-                    .foregroundColor(.green)
-                    .padding()
-            } else {
+            if #available(iOS 16.0, *) {
                 // 系统版本为16.0及以上
-                Text("您当前的系统版本为iOS \(systemVersion) \n系统已包含此功能，无需注入插件，您无需使用此工具进行测试。")
+                Text("您当前的系统版本为iOS \(systemVersion) \n iOS16.0版本开始，系统已包含此功能，无需注入插件，您无需使用此工具进行测试。")
                     .foregroundColor(.orange)
                     .padding()
+            } else {
+                // 系统版本低于16.0
+                Text("您当前的系统版本为iOS \(systemVersion) \n低于iOS 16.0的系统版本，您可以尝试使用该工具进行测试。")
+                    .foregroundColor(.green)
+                    .padding()
             }
+            
+        
             
             TextField("粘贴内容会显示在这里", text: $pastedText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())

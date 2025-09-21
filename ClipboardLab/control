@@ -1,0 +1,9 @@
+Package: com.developlab.clipboardlab
+Name: ClipboardLab
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Clipboard Lab
+Maintainer: developlab
+Author: developlab
+Section: Utilities
+Depends: firmware (>= 14.0) | ${LIBSWIFT}

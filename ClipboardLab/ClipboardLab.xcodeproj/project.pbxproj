@@ -12,6 +12,9 @@
 		17368B5F2CD80B0B00BF27EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 17368B5E2CD80B0B00BF27EB /* Assets.xcassets */; };
 		17368B622CD80B0B00BF27EB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 17368B612CD80B0B00BF27EB /* Preview Assets.xcassets */; };
 		17368B692CD81B8C00BF27EB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17368B682CD81B8C00BF27EB /* AppDelegate.swift */; };
+		17B0ED5F2D47DB3000F77781 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 17B0ED5E2D47DB3000F77781 /* Launch Screen.storyboard */; };
+		17B0ED612D47DB7100F77781 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 17B0ED602D47DB7100F77781 /* InfoPlist.xcstrings */; };
+		17B0ED872D47DCBA00F77781 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 17B0ED862D47DCBA00F77781 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +24,9 @@
 		17368B5E2CD80B0B00BF27EB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		17368B612CD80B0B00BF27EB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		17368B682CD81B8C00BF27EB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		17B0ED5E2D47DB3000F77781 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
+		17B0ED602D47DB7100F77781 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		17B0ED862D47DCBA00F77781 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,8 +62,11 @@
 				17368B682CD81B8C00BF27EB /* AppDelegate.swift */,
 				17368B5A2CD80B0A00BF27EB /* ClipboardLabApp.swift */,
 				17368B5C2CD80B0A00BF27EB /* ContentView.swift */,
+				17B0ED5E2D47DB3000F77781 /* Launch Screen.storyboard */,
 				17368B5E2CD80B0B00BF27EB /* Assets.xcassets */,
 				17368B602CD80B0B00BF27EB /* Preview Content */,
+				17B0ED602D47DB7100F77781 /* InfoPlist.xcstrings */,
+				17B0ED862D47DCBA00F77781 /* Localizable.xcstrings */,
 			);
 			path = ClipboardLab;
 			sourceTree = "<group>";
@@ -112,6 +121,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 17368B4E2CD80B0A00BF27EB;
 			productRefGroup = 17368B582CD80B0A00BF27EB /* Products */;
@@ -128,7 +138,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				17B0ED5F2D47DB3000F77781 /* Launch Screen.storyboard in Resources */,
+				17B0ED872D47DCBA00F77781 /* Localizable.xcstrings in Resources */,
 				17368B622CD80B0B00BF27EB /* Preview Assets.xcassets in Resources */,
+				17B0ED612D47DB7100F77781 /* InfoPlist.xcstrings in Resources */,
 				17368B5F2CD80B0B00BF27EB /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -208,6 +221,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -264,6 +278,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -279,10 +294,12 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Clipboard Lab";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -310,10 +327,12 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Clipboard Lab";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;

@@ -1,0 +1,41 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard Lab"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪贴板实验"
+          }
+        }
+      }
+    },
+    "剪贴板已清空" : {
+
+    },
+    "您当前的系统版本为iOS %@ \n iOS16.0版本开始，系统已包含此功能，无需注入插件，您无需使用此工具进行测试。" : {
+
+    },
+    "您当前的系统版本为iOS %@ \n低于iOS 16.0的系统版本，您可以尝试使用该工具进行测试。" : {
+
+    },
+    "清空剪贴板" : {
+
+    },
+    "粘贴" : {
+
+    },
+    "粘贴内容会显示在这里" : {
+
+    }
+  },
+  "version" : "1.0"
+}
