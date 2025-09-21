@@ -1,142 +1,144 @@
 #import <UIKit/UIKit.h>
-#import <substrate.h>
 #import <objc/runtime.h>
-#import <objc/message.h>
 
-@interface ClipboardMonitor : NSObject
-@end
-
-@implementation ClipboardMonitor
-
-// 显示提示框，询问用户是否允许读取剪贴板
-- (void)showAlertWithCompletion:(void (^)(BOOL allow))completion {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Clipboard Access"
-                                                                       message:@"This app wants to access your clipboard. Allow?"
-                                                                preferredStyle:UIAlertControllerStyleAlert];
-
-        // 添加 "允许" 按钮
-        UIAlertAction *allowAction = [UIAlertAction actionWithTitle:@"Allow" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            completion(YES); // 用户选择允许访问
-        }];
-        [alert addAction:allowAction];
-
-        // 添加 "拒绝" 按钮
-        UIAlertAction *denyAction = [UIAlertAction actionWithTitle:@"Deny" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            completion(NO); // 用户选择拒绝访问
-        }];
-        [alert addAction:denyAction];
-
-        // 获取当前的顶层视图控制器
-        UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
-        UIViewController *topViewController = keyWindow.rootViewController;
-        while (topViewController.presentedViewController) {
-            topViewController = topViewController.presentedViewController;
-        }
-
-        // 使用 objc_msgSend 动态调用 presentViewController:animated:completion:
-        ((void (*)(id, SEL, UIViewController *, BOOL, void (^)(void)))objc_msgSend)(topViewController, @selector(presentViewController:animated:completion:), alert, YES, nil);
-    });
-}
-
-// Hook UIPasteboard 的读取方法
-
-- (id)hookedPasteboardRead:(SEL)selector withOriginal:(id (^)(void))originalMethod {
-    __block BOOL allow = NO;
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
-    // 显示提示框
-    [self showAlertWithCompletion:^(BOOL userAllowed) {
-        allow = userAllowed;
-        dispatch_semaphore_signal(semaphore);
-    }];
-
-    // 等待用户选择
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-
-    if (allow) {
-        return originalMethod(); // 允许读取，调用原始方法
+static NSString *localizedString(NSString *key) {
+    NSString *language = [[NSLocale preferredLanguages].firstObject lowercaseString];
+    BOOL isChinese = [language hasPrefix:@"zh"];
+    NSDictionary *en = @{
+        @"ClipboardAccessTitle": @"Clipboard Access Reminder",
+        @"ClipboardAccessMessage": @"This app requests access to clipboard content\n",
+        @"Remember": @"Don't remind me again",
+        @"Allow": @"Allow Paste",
+        @"Deny": @"Deny Paste"
+    };
+    NSDictionary *zh = @{
+        @"ClipboardAccessTitle": @"剪贴板访问提醒",
+        @"ClipboardAccessMessage": @"此 App 请求访问剪贴板内容\n",
+        @"Remember": @"本次启动不再提示",
+        @"Allow": @"允许粘贴",
+        @"Deny": @"不允许粘贴"
+    };
+    if (isChinese) {
+        return zh[key] ?: key;
     } else {
-        return nil; // 禁止读取，返回nil
+        return en[key] ?: key;
     }
 }
 
+@interface _UIConcretePasteboard : UIPasteboard
 @end
 
-// Hook UIPasteboard 的相关方法
-%hook UIPasteboard
+static BOOL gClipboardAllowed = NO;
+static BOOL gClipboardRememberForSession = NO;
+static BOOL gCheckboxSelected = NO;
 
-// Hook string 方法
-- (NSString *)strings {
-    __block NSString *clipboardContent = nil;
-    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+static UIButton *gCheckboxButton = nil;
+static void (^gUpdateCheckboxUI)(void) = nil;
 
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Clipboard Access"
-                                                                       message:@"This app is trying to read your clipboard. Allow?"
-                                                                preferredStyle:UIAlertControllerStyleAlert];
+static id handleClipboardAccess(id (^origBlock)(void), id emptyValue) {
+    UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+    NSString *pbName = [pasteboard valueForKey:@"name"];
+    if ([pbName isEqual:UIPasteboardNameGeneral]) {
+        if (gClipboardRememberForSession) {
+            return gClipboardAllowed ? origBlock() : emptyValue;
+        }
 
-        // Allow action
-        UIAlertAction *allowAction = [UIAlertAction actionWithTitle:@"Allow" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            clipboardContent = %orig;
-            dispatch_semaphore_signal(sem);
-        }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:localizedString(@"ClipboardAccessTitle")
+                                                                           message:localizedString(@"ClipboardAccessMessage")
+                                                                    preferredStyle:UIAlertControllerStyleAlert];
 
-        // Deny action
-        UIAlertAction *denyAction = [UIAlertAction actionWithTitle:@"Deny" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            clipboardContent = nil;
-            dispatch_semaphore_signal(sem);
-        }];
+            
+            UIViewController *contentVC = [[UIViewController alloc] init];
+            UIView *containerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 270, 50)];
+            UIButton *checkboxButton = [UIButton buttonWithType:UIButtonTypeSystem];
+            checkboxButton.frame = CGRectMake(0, 0, 270, 50);
+            gCheckboxButton = checkboxButton;
 
-        [alert addAction:allowAction];
-        [alert addAction:denyAction];
+            gUpdateCheckboxUI = ^{
+                if (@available(iOS 13.0, *)) {
+                    UIImage *image = [UIImage systemImageNamed:(gCheckboxSelected ? @"checkmark.circle.fill" : @"circle")];
+                    [gCheckboxButton setImage:image forState:UIControlStateNormal];
+                    [gCheckboxButton setTitle:localizedString(@"Remember") forState:UIControlStateNormal];
+                    gCheckboxButton.tintColor = [UIColor systemBlueColor];
+                    gCheckboxButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+                    gCheckboxButton.titleLabel.font = [UIFont systemFontOfSize:15];
+                } else {
+                    NSString *title = gCheckboxSelected ? [@"☑️" stringByAppendingString:localizedString(@"Remember")] : [@"⬜️" stringByAppendingString:localizedString(@"Remember")];
+                    [gCheckboxButton setTitle:title forState:UIControlStateNormal];
+                    [gCheckboxButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+                    gCheckboxButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+                    gCheckboxButton.titleLabel.font = [UIFont systemFontOfSize:15];
+                    [gCheckboxButton setImage:nil forState:UIControlStateNormal];
+                }
+            };
+            if (gUpdateCheckboxUI) gUpdateCheckboxUI();
 
-        [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alert animated:YES completion:nil];
-    });
+            [gCheckboxButton addTarget:pasteboard action:@selector(toggleCheckbox:) forControlEvents:UIControlEventTouchUpInside];
+            [containerView addSubview:checkboxButton];
+            contentVC.view = containerView;
 
-    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    return clipboardContent;
+            [alert setValue:contentVC forKey:@"contentViewController"];
+
+            UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:localizedString(@"Allow")
+                                                                    style:UIAlertActionStyleDefault
+                                                                  handler:^(UIAlertAction * _Nonnull action) {
+                gClipboardAllowed = YES;
+                gClipboardRememberForSession = gCheckboxSelected;
+            }];
+            UIAlertAction *denyAction = [UIAlertAction actionWithTitle:localizedString(@"Deny")
+                                                                 style:UIAlertActionStyleCancel
+                                                               handler:^(UIAlertAction * _Nonnull action) {
+                gClipboardAllowed = NO;
+                gClipboardRememberForSession = gCheckboxSelected;
+            }];
+            [alert addAction:confirmAction];
+            [alert addAction:denyAction];
+
+            UIWindow *window = UIApplication.sharedApplication.windows.firstObject;
+            UIViewController *vc = window.rootViewController;
+            while (vc.presentedViewController) {
+                vc = vc.presentedViewController;
+            }
+            [vc presentViewController:alert animated:YES completion:nil];
+        });
+
+        return emptyValue; // 在用户选择前返回空或空数组
+    }
+    return origBlock();
 }
 
-// Hook image 方法
-- (UIImage *)image {
-    return [[ClipboardMonitor new] hookedPasteboardRead:_cmd withOriginal:^UIImage *{
+%hook _UIConcretePasteboard
+
+- (NSString *)string {
+    return handleClipboardAccess(^id{
         return %orig;
-    }];
+    }, @"");
 }
 
-// Hook dataForPasteboardType: 方法
-- (NSData *)dataForPasteboardType:(NSString *)type {
-    return [[ClipboardMonitor new] hookedPasteboardRead:_cmd withOriginal:^NSData *{
-        return %orig(type);
-    }];
+- (UIImage *)image {
+    return handleClipboardAccess(^id{
+        return %orig;
+    }, nil);
+}
+
+- (NSURL *)URL {
+    return handleClipboardAccess(^id{
+        return %orig;
+    }, nil);
+}
+
+- (NSArray<NSURL *> *)URLs {
+    return handleClipboardAccess(^id{
+        return %orig;
+    }, @[]);
+}
+
+%new
+- (void)toggleCheckbox:(UIButton *)sender {
+    extern BOOL gCheckboxSelected;
+    gCheckboxSelected = !gCheckboxSelected;
+    if (gUpdateCheckboxUI) gUpdateCheckboxUI();
 }
 
 %end
-
-%ctor {
-    // 初始化代码
-    NSLog(@"[Clipboard Tweak] 插件加载成功");
-
-    // 在主线程显示弹窗
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"插件加载成功"
-                                                                       message:@"Clipboard Tweak 已成功注入。"
-                                                                preferredStyle:UIAlertControllerStyleAlert];
-
-        // 添加一个确定按钮
-        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil];
-        [alert addAction:okAction];
-
-        // 获取当前的顶层视图控制器
-        UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
-        UIViewController *topViewController = keyWindow.rootViewController;
-        while (topViewController.presentedViewController) {
-            topViewController = topViewController.presentedViewController;
-        }
-
-        // 显示弹窗
-        [topViewController presentViewController:alert animated:YES completion:nil];
-    });
-}
-
