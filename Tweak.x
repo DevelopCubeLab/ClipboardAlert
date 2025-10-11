@@ -6,14 +6,14 @@ static NSString *localizedString(NSString *key) {
     BOOL isChinese = [language hasPrefix:@"zh"];
     NSDictionary *en = @{
         @"ClipboardAccessTitle": @"Clipboard Access Reminder",
-        @"ClipboardAccessMessage": @"This app requests access to clipboard content\n",
+        @"ClipboardAccessMessage": @"This app requests access to clipboard content\n\n",
         @"Remember": @"Don't remind me again",
         @"Allow": @"Allow Paste",
         @"Deny": @"Deny Paste"
     };
     NSDictionary *zh = @{
         @"ClipboardAccessTitle": @"剪贴板访问提醒",
-        @"ClipboardAccessMessage": @"此 App 请求访问剪贴板内容\n",
+        @"ClipboardAccessMessage": @"此 App 请求访问剪贴板内容\n\n",
         @"Remember": @"本次启动不再提示",
         @"Allow": @"允许粘贴",
         @"Deny": @"不允许粘贴"
@@ -49,10 +49,15 @@ static id handleClipboardAccess(id (^origBlock)(void), id emptyValue) {
                                                                     preferredStyle:UIAlertControllerStyleAlert];
 
             
-            UIViewController *contentVC = [[UIViewController alloc] init];
-            UIView *containerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 270, 50)];
             UIButton *checkboxButton = [UIButton buttonWithType:UIButtonTypeSystem];
-            checkboxButton.frame = CGRectMake(0, 0, 270, 50);
+            checkboxButton.translatesAutoresizingMaskIntoConstraints = NO;
+            [alert.view addSubview:checkboxButton];
+            [NSLayoutConstraint activateConstraints:@[
+                [checkboxButton.centerXAnchor constraintEqualToAnchor:alert.view.centerXAnchor],
+                [checkboxButton.bottomAnchor constraintEqualToAnchor:alert.view.bottomAnchor constant:-58],
+                [checkboxButton.widthAnchor constraintEqualToConstant:250],
+                [checkboxButton.heightAnchor constraintEqualToConstant:30]
+            ]];
             gCheckboxButton = checkboxButton;
 
             gUpdateCheckboxUI = ^{
@@ -75,10 +80,6 @@ static id handleClipboardAccess(id (^origBlock)(void), id emptyValue) {
             if (gUpdateCheckboxUI) gUpdateCheckboxUI();
 
             [gCheckboxButton addTarget:pasteboard action:@selector(toggleCheckbox:) forControlEvents:UIControlEventTouchUpInside];
-            [containerView addSubview:checkboxButton];
-            contentVC.view = containerView;
-
-            [alert setValue:contentVC forKey:@"contentViewController"];
 
             UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:localizedString(@"Allow")
                                                                     style:UIAlertActionStyleDefault
